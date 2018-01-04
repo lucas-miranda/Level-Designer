@@ -1,7 +1,7 @@
 {
   "name": "game-level-designer",
   "version": "1.0.0",
-  "description": "A 2D level designer generic tool, aiming to fast prototyping.",
+  "description": "A 2D level design tool, aiming to fast prototyping.",
   "main": "src/app.js",
   "scripts": {
     "run": "electron src/app.js",
