@@ -1,0 +1,26 @@
+{
+  "name": "game-level-designer",
+  "version": "1.0.0",
+  "description": "A 2D level designer generic tool, aiming to fast prototyping.",
+  "main": "src/app.js",
+  "scripts": {
+    "run": "electron src/app.js",
+    "start": "electron src/app.js",
+    "postInstall": "typings install && npm install electron -g && npm install electron-packager -g",
+    "packageAll": "electron-packager . --all --prune --overwrite",
+    "packageWin": "electron-packager . --platform=win32 --prune --overwrite"
+  },
+  "repository": "",
+  "keywords": [
+    "Electron",
+    "level-design",
+    "gamedev",
+    "2d"
+  ],
+  "author": "Lucas A. Miranda",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^1.7.10",
+    "typings": "^2.1.1"
+  }
+}
