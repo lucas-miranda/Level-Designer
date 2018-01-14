@@ -1,0 +1,75 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+@toolbar-background-color: #696969;
+
+#toolbar {
+    list-style: none;
+    padding: 3px 5px;
+    margin: 0;
+
+    display: flex;
+    flex-flow: row wrap;
+    //justify-content: space-around;
+
+    background-color: @toolbar-background-color;
+    width: 100%;
+    height: 32px;
+    border-bottom: 1px solid darken(@toolbar-background-color, 30%);
+}
+
+.toolbar-button-active {
+    color: red;
+}
+
+.toolbar-text-button {
+    margin: 0 1px;
+    vertical-align: middle;
+
+    & > button {
+        @background-color: lighten(@toolbar-background-color, 40%);
+
+        height: 100%;
+        padding: 1px 7px;
+        background-color: @background-color;
+        border: 1px solid darken(@background-color, 45%);
+        border-radius: 2px;
+        text-align: center;
+
+        transition-duration: 0.2s;
+        &:hover {
+            background-color: darken(@background-color, 15%);
+            border-color: darken(@background-color, 15% + 35%);
+        }
+    }
+}
+
+#stampbar {
+    @background-color: darken(@toolbar-background-color, 10%);
+
+    background-color: @background-color;
+    flex: 0 0 150px;
+    border-right: 1px solid darken(@background-color, 30%);
+}
+
+#renderWrapper {
+	/*position: absolute;
+	top: 50vh;
+	left: 50vw;
+	transform: translate(-50%, -50%);*/
+    background-color: #fffff1;
+    flex: 1 1 100%;
+}
+
+#external-flex-container {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+}
+
+#external-flex-container > * {
+    flex-grow: 100%;
+}

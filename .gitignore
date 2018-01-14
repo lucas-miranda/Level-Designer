@@ -1,6 +1,8 @@
 # Created by https://www.gitignore.io/api/vim,node,linux,macos,windows,visualstudio
 
+build/
 *.js
+*.css
 
 ### Linux ###
 *~

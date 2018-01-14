@@ -3,17 +3,23 @@
   "author": "Lucas A. Miranda",
   "version": "1.0.0",
   "description": "A 2D level design tool, aiming to fast prototyping.",
-  "repository": "https://github.com/lucas-miranda/Level-Designer",
+  "repository": "",
   "license": "MIT",
   "main": "src/app.js",
   "scripts": {
-    "run": "electron src/app.js",
     "start": "electron src/app.js",
+    "run": "npm start",
+    "clean": "C:\\cmder\\vendor\\git-for-windows\\usr\\bin\\find.exe ./src ( -name '*.js' -o -name '*.css' ) | xargs rm -f",
+    "build-css": "lessc src/styles.less src/styles.css",
+    "build-code": "tsc",
+    "build-all": "npm run-script build-css && npm run-script build-code",
+    "build-run-css": "npm run-script build-css && npm start",
+    "build-run-code": "npm run-script build-code && npm start",
+    "build-run-all": "npm run-script build-all && npm start",
     "postInstall": "typings install && npm install electron -g && npm install electron-packager -g",
     "packageAll": "electron-packager . --all --prune --overwrite",
     "packageWin": "electron-packager . --platform=win32 --prune --overwrite"
   },
-  "repository": "",
   "keywords": [
     "Electron",
     "level-design",
@@ -21,7 +27,12 @@
     "2d"
   ],
   "devDependencies": {
+    "@types/pixi.js": "^4.6.3",
     "electron": "^1.7.10",
+    "less": "^2.7.3",
     "typings": "^2.1.1"
+  },
+  "dependencies": {
+    "pixi.js": "^4.6.2"
   }
 }
