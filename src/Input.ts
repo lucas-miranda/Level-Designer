@@ -1,6 +1,7 @@
-import { clampPoint, join } from './Util/Helper';
+import { join } from './Util/Helper';
 import Settings from './Settings';
 import { Event, EventEmitter } from './Event';
+import Point from './Math/Point';
 
 export enum MouseButtons {
     Main = 0,
@@ -39,22 +40,24 @@ export default class Input {
     private static _mouseButtons: EventEmitter<MouseButtons, MouseButton>;
     private static _keyboardKeys: EventEmitter<Key, KeyboardButton>;
     public static manager: PIXI.interaction.InteractionManager;
-    public static pointerLastPos: PIXI.Point;
-    public static pointerMovement: PIXI.Point = new PIXI.Point();
+    public static pointerLastPos: Point;
+    public static pointerMovement: Point = new Point();
     public static wheelDelta: number = 0;
-    //public static pointerAnchorPos: Phaser.Point = new Phaser.Point();
+    public static cameraContainer: PIXI.Container;
 
-    public static get pointerGlobalPos(): PIXI.Point {
-        return Input.manager.mouse.global;
+    public static get pointerGlobalPos(): Point {
+        return Point.fromPoint(Input.manager.mouse.global);
     }
 
-    public static get pointerPos(): PIXI.Point {
-        return clampPoint(Input.pointerGlobalPos, new PIXI.Point(0, 0), new PIXI.Point(Settings.width, Settings.height));
+    public static get pointerPos(): Point {
+        let viewPos = Point.fromPoint(Input.cameraContainer.position), viewSize = new Point(Input.cameraContainer.width, Input.cameraContainer.height);
+        return Point.clamp(Point.subtract(Input.pointerGlobalPos, viewPos), Point.ZERO, Point.fromSize(Settings.gridSize));
     }
 
-    public static start(manager: PIXI.interaction.InteractionManager): void {
+    public static start(manager: PIXI.interaction.InteractionManager, cameraContainer: PIXI.Container): void {
         Input.manager = manager;
         Input.manager.moveWhenInside = true;
+        Input.cameraContainer = cameraContainer;
         Input.pointerLastPos = Input.pointerPos;
 
         // register events
@@ -74,7 +77,7 @@ export default class Input {
     }
 
     public static update(delta: number): void {
-        Input.pointerMovement = new PIXI.Point(Input.pointerPos.x - Input.pointerLastPos.x, Input.pointerPos.y - Input.pointerLastPos.y)
+        Input.pointerMovement = new Point(Input.pointerPos.x - Input.pointerLastPos.x, Input.pointerPos.y - Input.pointerLastPos.y)
 
         for (let mouseButton of Input._mouseButtons) {
             mouseButton[1].update(delta);

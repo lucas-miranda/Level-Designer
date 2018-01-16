@@ -1,12 +1,25 @@
 export default class Settings {
     public static renderWrapper: HTMLElement;
-    public static size: Size;
+    public static rendererSize: Size = { width: 0, height: 0 };
+    public static gridSize: Size = { width: 0, height: 0 };
 
-    public static get width(): number {
-        return Settings.size.width;
+    public static get rendererWidth(): number {
+        return Settings.rendererSize.width;
     }
 
-    public static get height(): number {
-        return Settings.size.height;
+    public static get rendererHeight(): number {
+        return Settings.rendererSize.height;
+    }
+
+    public static get halfRendererSize(): Size {
+        return { width: Settings.rendererWidth / 2.0, height: Settings.rendererHeight / 2.0 };
+    }
+
+    public static get gridWidth(): number {
+        return Settings.gridSize.width;
+    }
+
+    public static get gridHeight(): number {
+        return Settings.gridSize.height;
     }
 }

@@ -74,7 +74,7 @@ export default class Main {
 
         // messages
         ipcMain.on('request-setup', (event) => {
-            event.sender.send('setup', 50, 50, { width: 16, height: 16 });
+            event.sender.send('setup', 120, 90, /*50, 50,*/ { width: 16, height: 16 });
         })
     }
 }

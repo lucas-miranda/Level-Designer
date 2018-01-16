@@ -1,10 +1,8 @@
-// math
-export function clamp(value: number, min: number, max: number) {
-    return Math.min(Math.max(value, min), max);
-}
+import Point from '../Math/Point';
 
-export function clampPoint(value: PIXI.Point, min: PIXI.Point, max: PIXI.Point) {
-    return new PIXI.Point(clamp(value.x, min.x, max.x), clamp(value.y, min.y, max.y));
+// math
+export function clamp(value: number, min: number, max: number): number {
+    return Math.min(Math.max(value, min), max);
 }
 
 // string

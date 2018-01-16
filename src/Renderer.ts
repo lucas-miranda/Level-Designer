@@ -8,10 +8,13 @@ import Graphic from './Graphics/Graphic';
 import Toolbar from './Tools/Toolbar';
 import Tool from './Tools/Tool';
 import Input, { MouseButtons, MouseButton, Key, KeyboardButton } from './Input';
+import Point from './Math/Point';
 import { clamp } from './Util/Helper';
 
 // - pan
 const panMaxSpeed = 16;
+const panOutOfGridHorizontalSpacingFactor = 0.15;
+const panOutOfGridVerticalSpacingFactor = 0.15;
 
 // - zoom
 const zoomIncFactor = 0.6;
@@ -35,6 +38,7 @@ export class Renderer {
 
     // - pan
     private _viewBounds: PIXI.Rectangle;
+    private _pointerAnchorPos: Point;
 
     // - zoom
     private _zoomFactor: number = 1.0;
@@ -55,18 +59,18 @@ export class Renderer {
             console.log("resize to: ", newWidth, newHeight);
         }, false);
 
-        Settings.size = { width: this._app.renderer.width, height: this._app.renderer.height };
+        Settings.rendererSize = { width: this._app.renderer.width, height: this._app.renderer.height };
 
         // additional options
         this._app.renderer.autoResize = true;
         this._app.renderer.roundPixels = true;
 
-        // input
-        Input.start(this.interactionManager);
-
         // grid
         this.gridContainer = new PIXI.Container();
         this._app.stage.addChild(this.gridContainer);
+
+        // input
+        Input.start(this.interactionManager, this.gridContainer);
 
         // graphics
         Draw.start(this.gridContainer);
@@ -92,31 +96,23 @@ export class Renderer {
         return this._app.renderer.plugins.interaction;
     }
 
-    public get width(): number {
-        return this._app.renderer.width;
-    }
-
-    public get height(): number {
-        return this._app.renderer.height;
-    }
-
-    public get size(): Size {
-        return { width: this.width, height: this.height };
-    }
-
     public get viewBounds(): PIXI.Rectangle {
         return this._viewBounds;
     }
 
     public set viewBounds(bounds: PIXI.Rectangle) {
         this._viewBounds = bounds;
-        this.gridContainer.setTransform(-this.viewBounds.x, -this.viewBounds.y, this.zoom, this.zoom);
+        this.updateTransform();
     }
 
-    public set viewPosition(position: PIXI.Point) {
+    public get viewPosition(): Point {
+        return new Point(this._viewBounds.x, this._viewBounds.y);
+    }
+
+    public set viewPosition(position: Point) {
         this._viewBounds.x = position.x;
         this._viewBounds.y = position.y;
-        this.gridContainer.setTransform(-this.viewBounds.x, -this.viewBounds.y, this.zoom, this.zoom);
+        this.updateTransform();
     }
 
     public get zoom(): number {
@@ -125,30 +121,94 @@ export class Renderer {
 
     public set zoom(factor: number) {
         this._zoomFactor = factor;
-        this.gridContainer.setTransform(-this.viewBounds.x, -this.viewBounds.y, factor, factor);
+        this.updateTransform();
     }
 
     public setupGrid(columns: number, rows: number, cellSize: Size) {
         this.columns = columns;
         this.rows = rows;
         this.cellSize = cellSize;
-        this.bounds = new PIXI.Rectangle(0, 0, columns * cellSize.width, rows * cellSize.height);
+        Settings.gridSize = { width: columns * cellSize.width, height: rows * cellSize.height };
+        this.bounds = new PIXI.Rectangle(0, 0, Settings.gridSize.width, Settings.gridSize.height);
+        this._viewBounds = new PIXI.Rectangle(0, 0, Settings.gridSize.width, Settings.gridSize.height);
 
         // graphics
         this.surface = new Surface(this._app.renderer, this.bounds.width, this.bounds.height);
-        this._app.stage.addChild(this.surface.sprite);
+        this.gridContainer.addChild(this.surface.sprite);
         this._isReady = true;
+
+        this.resetView();
+    }
+
+    public centralizeView() {
+        // calculate centralized view if it's smaller than renderer wrapper size
+        let rendererCenter = Point.fromSize(Settings.halfRendererSize);
+        let centralizedViewPos = rendererCenter.subtract(this._viewBounds.width / 2.0, this.viewBounds.height / 2.0).negate();
+        this.viewPosition = centralizedViewPos;
+    }
+
+    public resetView() {
+        let viewPos = this.viewPosition;
+        let extraHorizontalSpacing = Settings.gridWidth * panOutOfGridHorizontalSpacingFactor;
+        let extraVerticalSpacing = Settings.gridHeight * panOutOfGridVerticalSpacingFactor;
+
+        // calculate centralized view if it's smaller than renderer wrapper size
+        let rendererCenter = Point.fromSize(Settings.halfRendererSize);
+        let centralizedViewPos = rendererCenter.subtract(this._viewBounds.width / 2.0, this.viewBounds.height / 2.0).negate();
+
+        // horizontal
+        if (this._viewBounds.width + 2 * extraHorizontalSpacing < Settings.rendererWidth) {
+            viewPos.x = centralizedViewPos.x;
+        } else {
+            viewPos.x = -extraHorizontalSpacing;
+        }
+
+        // vertical
+        if (this._viewBounds.height + 2 * extraVerticalSpacing < Settings.rendererHeight) {
+            viewPos.y = centralizedViewPos.y;
+        } else {
+            viewPos.y = (Settings.gridHeight + 2 * extraVerticalSpacing) - Settings.rendererHeight - extraVerticalSpacing;
+        }
+
+        this.viewPosition = viewPos;
     }
 
     protected start() {
         // pan
-        this.viewBounds = new PIXI.Rectangle(0, 0, this.width, this.height);
+        this.viewBounds = new PIXI.Rectangle(0, 0, Settings.rendererWidth, Settings.rendererHeight);
         Input.mouseButton(MouseButtons.Secondary)
+                .addListener('pressed', function() {
+                    this._pointerAnchorPos = Input.pointerGlobalPos;
+                }, this)
                 .addListener('down', function() {
-                    let screenCenter = new PIXI.Point(this.width / 2.0, this.height / 2.0);
-                    let panMovement = new PIXI.Point((Input.pointerPos.x - screenCenter.x) / screenCenter.x, (Input.pointerPos.y - screenCenter.y) / screenCenter.y);
-                    panMovement.set(panMovement.x * panMaxSpeed * this.zoom, panMovement.y * panMaxSpeed * this.zoom);
-                    this.viewPosition = new PIXI.Point(this.viewBounds.x + panMovement.x, this.viewBounds.y + panMovement.y);
+                    let viewPos = this.viewPosition;
+                    let extraHorizontalSpacing = Settings.gridWidth * panOutOfGridHorizontalSpacingFactor;
+                    let extraVerticalSpacing = Settings.gridHeight * panOutOfGridVerticalSpacingFactor;
+
+                    // calculate centralized view if it's smaller than renderer wrapper size
+                    let rendererCenter = Point.fromSize(Settings.halfRendererSize);
+                    let centralizedViewPos = rendererCenter.subtract(this._viewBounds.width / 2.0, this.viewBounds.height / 2.0).negate();
+
+                    // calculate mouse pan movement
+                    let screenCenter = Point.fromSize(Settings.halfRendererSize);
+                    let panMovement = Point.subtract(Input.pointerGlobalPos, this._pointerAnchorPos).divide(screenCenter).multiply(panMaxSpeed * this.zoom);
+                    let afterPanViewPos = Point.add(viewPos, panMovement);
+
+                    // horizontal
+                    if (this._viewBounds.width + 2 * extraHorizontalSpacing < Settings.rendererWidth) {
+                        viewPos.x = centralizedViewPos.x;
+                    } else {
+                        viewPos.x = clamp(afterPanViewPos.x, -extraHorizontalSpacing, (Settings.gridWidth + 2 * extraHorizontalSpacing) - Settings.rendererWidth - extraHorizontalSpacing);
+                    }
+
+                    // vertical
+                    if (this._viewBounds.height + 2 * extraVerticalSpacing < Settings.rendererHeight) {
+                        viewPos.y = centralizedViewPos.y;
+                    } else {
+                        viewPos.y = clamp(afterPanViewPos.y, -extraVerticalSpacing, (Settings.gridHeight + 2 * extraVerticalSpacing) - Settings.rendererHeight - extraVerticalSpacing);
+                    }
+
+                    this.viewPosition = viewPos;
                 }, this);
 
         this.debugText = new PIXI.Text('', { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
@@ -160,7 +220,7 @@ export class Renderer {
     }
 
     protected update(delta: number): void {
-        this.debugText.text = `MousePos: [${Input.pointerPos.x}, ${Input.pointerPos.y}]`;
+        this.debugText.text = `MousePos: [${Input.pointerPos.x}, ${Input.pointerPos.y}]\nView Pos: ${this.viewPosition}`;
         this.toolbar.update(delta);
 
         // zoom
@@ -185,6 +245,10 @@ export class Renderer {
         Draw.lineStyle(0xCAEBFD);
         Draw.grid(this.bounds, this.cellSize);
         this.toolbar.render(this.surface);
+    }
+
+    private updateTransform(): void {
+        this.gridContainer.setTransform(-this._viewBounds.x, -this._viewBounds.y, this.zoom, this.zoom);
     }
 }
 
