@@ -50,8 +50,18 @@ export default class Input {
     }
 
     public static get pointerPos(): Point {
-        let viewPos = Point.fromPoint(Input.cameraContainer.position), viewSize = new Point(Input.cameraContainer.width, Input.cameraContainer.height);
+        let viewPos = Point.fromPoint(Input.cameraContainer.position).divide(Settings.currentZoomFactor);
+        return Point.clamp(Point.subtract(Input.pointerGlobalPos.divide(Settings.currentZoomFactor), viewPos), Point.ZERO, Point.fromSize(Settings.gridSize));
+    }
+
+    /*public static get pointerScreenPos(): Point {
+        let viewPos = Point.fromPoint(Input.cameraContainer.position).divide(Settings.currentZoomFactor);
         return Point.clamp(Point.subtract(Input.pointerGlobalPos, viewPos), Point.ZERO, Point.fromSize(Settings.gridSize));
+    }*/
+
+    public static get pointerGridCell(): Point {
+        let pointerPos = Input.pointerPos;
+        return new Point(Math.floor(pointerPos.x / Settings.gridCellSize.width), Math.floor(pointerPos.y / Settings.gridCellSize.height));
     }
 
     public static start(manager: PIXI.interaction.InteractionManager, cameraContainer: PIXI.Container): void {

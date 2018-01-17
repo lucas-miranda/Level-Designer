@@ -2,6 +2,8 @@ export default class Settings {
     public static renderWrapper: HTMLElement;
     public static rendererSize: Size = { width: 0, height: 0 };
     public static gridSize: Size = { width: 0, height: 0 };
+    public static gridCellSize: Size = { width: 0, height: 0 };
+    public static currentZoomFactor = 1.0;
 
     public static get rendererWidth(): number {
         return Settings.rendererSize.width;

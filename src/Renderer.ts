@@ -23,6 +23,7 @@ const zoomMax = 4.2;
 
 export class Renderer {
     private _renderWrapper: HTMLElement;
+    private _statusBarElements: Map<string, HTMLElement> = new Map<string, HTMLElement>();
     private _app: PIXI.Application;
     private _isReady: boolean = false;
     public toolbar: Toolbar;
@@ -34,14 +35,12 @@ export class Renderer {
     public gridContainer: PIXI.Container;
     public columns: number;
     public rows: number;
-    public cellSize: Size;
 
     // - pan
     private _viewBounds: PIXI.Rectangle;
     private _pointerAnchorPos: Point;
 
     // - zoom
-    private _zoomFactor: number = 1.0;
     //let zoomTween: Tween;
 
     debugText: PIXI.Text;
@@ -102,7 +101,6 @@ export class Renderer {
 
     public set viewBounds(bounds: PIXI.Rectangle) {
         this._viewBounds = bounds;
-        this.updateTransform();
     }
 
     public get viewPosition(): Point {
@@ -112,22 +110,20 @@ export class Renderer {
     public set viewPosition(position: Point) {
         this._viewBounds.x = position.x;
         this._viewBounds.y = position.y;
-        this.updateTransform();
     }
 
     public get zoom(): number {
-        return this._zoomFactor;
+        return Settings.currentZoomFactor;
     }
 
     public set zoom(factor: number) {
-        this._zoomFactor = factor;
-        this.updateTransform();
+        Settings.currentZoomFactor = factor;
     }
 
     public setupGrid(columns: number, rows: number, cellSize: Size) {
         this.columns = columns;
         this.rows = rows;
-        this.cellSize = cellSize;
+        Settings.gridCellSize = cellSize;
         Settings.gridSize = { width: columns * cellSize.width, height: rows * cellSize.height };
         this.bounds = new PIXI.Rectangle(0, 0, Settings.gridSize.width, Settings.gridSize.height);
         this._viewBounds = new PIXI.Rectangle(0, 0, Settings.gridSize.width, Settings.gridSize.height);
@@ -174,6 +170,10 @@ export class Renderer {
     }
 
     protected start() {
+        this._statusBarElements.set('mousePos', document.getElementById('mouse-pos'));
+        this._statusBarElements.set('mouseGridPos', document.getElementById('mouse-grid-pos'));
+        this._statusBarElements.set('zoom', document.getElementById('zoom'));
+
         // pan
         this.viewBounds = new PIXI.Rectangle(0, 0, Settings.rendererWidth, Settings.rendererHeight);
         Input.mouseButton(MouseButtons.Secondary)
@@ -220,20 +220,26 @@ export class Renderer {
     }
 
     protected update(delta: number): void {
-        this.debugText.text = `MousePos: [${Input.pointerPos.x}, ${Input.pointerPos.y}]\nView Pos: ${this.viewPosition}`;
+        //this.debugText.text = `MousePos: ${Input.pointerPos} | ViewPos: ${this.viewPosition.divide(Settings.currentZoomFactor)} | Grid Cell: ${Input.pointerGridCell}`;
         this.toolbar.update(delta);
 
         // zoom
         if (Input.wheelDelta !== 0) {
             let inc = zoomIncFactor * Math.sign(Input.wheelDelta);
-            this.zoom = clamp(this.zoom + inc, zoomMin, zoomMax);
-            /*zoomTween = tween(game.world.scale)
-                                    .to({ x: zoom, y: zoom }, 600, Easing.Sinusoidal.Out, true, 0, 0, false);*/
+            let previousZoom = this.zoom;
+            let nextZoom = clamp(this.zoom + inc, zoomMin, zoomMax);
+            this.viewPosition = this.viewPosition.add(Point.multiply(Input.pointerPos, (nextZoom / previousZoom) - 1.0));
+            this.zoom = nextZoom;
         }
     }
 
     protected lateUpdate(): void {
         Input.lateUpdate();
+        let pointerPos = Input.pointerPos;
+        let pointerGridCell = Input.pointerGridCell;
+        this._statusBarElements.get('mousePos').textContent = `${pointerPos.x.toFixed(0)}, ${pointerPos.y.toFixed(0)}`;
+        this._statusBarElements.get('mouseGridPos').textContent = `[${pointerGridCell.x}, ${pointerGridCell.y}]`;
+        this._statusBarElements.get('zoom').textContent = `${(this.zoom * 100.0).toFixed(0)}%`;
     }
 
     protected render(): void {
@@ -242,13 +248,10 @@ export class Renderer {
         }
 
         Draw.clear();
-        Draw.lineStyle(0xCAEBFD);
-        Draw.grid(this.bounds, this.cellSize);
-        this.toolbar.render(this.surface);
-    }
-
-    private updateTransform(): void {
         this.gridContainer.setTransform(-this._viewBounds.x, -this._viewBounds.y, this.zoom, this.zoom);
+        Draw.lineStyle(0xCAEBFD);
+        Draw.grid(this.bounds, Settings.gridCellSize);
+        this.toolbar.render(this.surface);
     }
 }
 

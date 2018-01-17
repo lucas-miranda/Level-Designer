@@ -64,6 +64,22 @@ html, body {
     flex: 1 1 100%;
 }
 
+#statusbar {
+    background-color: @toolbar-background-color;
+    color: white;
+    bottom: 0;
+    right: 0;
+    position: absolute;
+    padding: 2px 7px 3px 15px;
+    border-radius: 15px 0 0 0;
+    border-top: 1px solid darken(@toolbar-background-color, 20%);
+    border-left: 1px solid darken(@toolbar-background-color, 20%);
+
+    & > span + span {
+        margin-left: 15px;
+    }
+}
+
 #external-flex-container {
     display: flex;
     align-items: stretch;

@@ -49,6 +49,10 @@ export default class Point {
         return new Point(clamp(value.x, min.x, max.x), clamp(value.y, min.y, max.y));
     }
 
+    public clone(): Point {
+        return Point.fromPoint(this);
+    }
+
     public negate(): Point {
         this.x = -this.x;
         this.y = -this.y;
