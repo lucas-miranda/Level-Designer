@@ -1,15 +1,20 @@
 import { Renderer } from './Renderer';
 import Graphic from './Graphics/Graphic';
+import Settings from './Settings';
 
 export default class Surface {
-    private _renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer;
+    private _renderer: PIXI.WebGLRenderer;
     private _renderTexture: PIXI.RenderTexture;
     private _renderSprite: PIXI.Sprite;
 
-    constructor(renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer, width: number, height: number) {
+    constructor(renderer: PIXI.WebGLRenderer, width: number, height: number) {
         this._renderer = renderer;
+
         this._renderTexture = PIXI.RenderTexture.create(width, height, PIXI.SCALE_MODES.NEAREST);
+
         this._renderSprite = new PIXI.Sprite(this._renderTexture);
+
+        this._renderer.clearRenderTexture(this._renderTexture, Settings.clearColor);
     }
 
     public get renderTextuer(): PIXI.RenderTexture {

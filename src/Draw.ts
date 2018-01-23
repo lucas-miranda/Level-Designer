@@ -1,4 +1,4 @@
-import Graphics from './Graphics/Graphics';
+import Graphics, { ShapeFillOptions, ShapeLineOptions } from './Graphics/Graphics';
 
 export default class Draw {
     public static graphicsContext: Graphics;
@@ -33,6 +33,10 @@ export default class Draw {
 
     public static line(x0: number, y0: number, x1: number, y1: number): void {
         Draw.graphicsContext.drawLine(x0, y0, x1, y1);
+    }
+
+    public static rectangle(x: number, y: number, width: number, height: number, fillOptions?: ShapeFillOptions, lineOptions?: ShapeLineOptions): void {
+        Draw.graphicsContext.drawRectangle(x, y, width, height, fillOptions, lineOptions);
     }
 
     public static clear(): void {

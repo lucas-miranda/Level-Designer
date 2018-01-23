@@ -71,9 +71,6 @@ export class Renderer {
         // input
         Input.start(this.interactionManager, this.gridContainer);
 
-        // graphics
-        Draw.start(this.gridContainer);
-
         // toolbar
         Tool.bufferGraphicsContext = Graphics.create(this.gridContainer);
         this.toolbar = new Toolbar();
@@ -129,9 +126,18 @@ export class Renderer {
         this._viewBounds = new PIXI.Rectangle(0, 0, Settings.gridSize.width, Settings.gridSize.height);
 
         // graphics
-        this.surface = new Surface(this._app.renderer, this.bounds.width, this.bounds.height);
-        this.gridContainer.addChild(this.surface.sprite);
-        this._isReady = true;
+        if (this.surface === undefined) {
+            this.surface = new Surface(this._app.renderer as PIXI.WebGLRenderer, this.bounds.width, this.bounds.height);
+            this.gridContainer.addChild(this.surface.sprite);
+            this._isReady = true;
+        } else {
+            this.surface.setup(this.bounds.width, this.bounds.height);
+        }
+
+        // draw
+        if (Draw.graphicsContext === undefined) {
+            Draw.start(this.gridContainer);
+        }
 
         this.resetView();
     }
@@ -249,15 +255,17 @@ export class Renderer {
 
         Draw.clear();
         this.gridContainer.setTransform(-this._viewBounds.x, -this._viewBounds.y, this.zoom, this.zoom);
+        this.toolbar.render(this.surface);
         Draw.lineStyle(0xCAEBFD);
         Draw.grid(this.bounds, Settings.gridCellSize);
-        this.toolbar.render(this.surface);
     }
 }
 
 let options = {
-    transparent: true,
-    antialias: false
+    //transparent: true,
+    antialias: false,
+    backgroundColor: 0xfffff1,
+    roundPixels: true
 };
 
 let renderer: Renderer;

@@ -1,5 +1,16 @@
 import Graphic from './Graphic';
 
+export interface ShapeFillOptions {
+    color: number;
+    alpha?: number;
+}
+
+export interface ShapeLineOptions {
+    color: number;
+    width?: number;
+    alpha?: number;
+}
+
 export default class Graphics extends Graphic {
     private _graphicsContext: PIXI.Graphics;
 
@@ -33,6 +44,14 @@ export default class Graphics extends Graphic {
 
     public lineStyle(color: number, lineWidth?: number, alpha?: number): void {
         this._graphicsContext.lineStyle(lineWidth || 1, color, alpha);
+    }
+
+    public beginFill(color: number, alpha?: number): void {
+        this._graphicsContext.beginFill(color, alpha);
+    }
+
+    public endFill(): void {
+        this._graphicsContext.endFill();
     }
 
     public drawGrid(viewport: PIXI.Rectangle, cellSize: Size): void {
@@ -69,7 +88,39 @@ export default class Graphics extends Graphic {
         this._graphicsContext.lineTo(x1, y1);
     }
 
+    public drawRectangle(x: number, y: number, width: number, height: number, fillOptions?: ShapeFillOptions, lineOptions?: ShapeLineOptions): void {
+        this.preDraw(fillOptions, lineOptions);
+        this._graphicsContext.drawRect(x, y, width, height);
+        this.postDraw(fillOptions);
+    }
+
     public clear(): void {
         this._graphicsContext.clear();
+    }
+
+    private preDraw(fillOptions: ShapeFillOptions, lineOptions: ShapeLineOptions): void {
+        if (fillOptions !== undefined && fillOptions !== null) {
+            /*if (fillOptions.alpha === 0) {
+                this._graphicsContext.blendMode = 20;
+                fillOptions.alpha = 1.0;
+            }*/
+
+            this.beginFill(fillOptions.color, fillOptions.alpha);
+        }
+
+        if (lineOptions !== undefined && lineOptions !== null) {
+            this.lineStyle(lineOptions.color, lineOptions.width, lineOptions.alpha);
+        }
+    }
+
+    private postDraw(fillOptions: ShapeFillOptions): void {
+        if (fillOptions !== undefined && fillOptions !== null) {
+            this.endFill();
+            /*if (this._graphicsContext.blendMode === 20) {
+                this._graphicsContext.blendMode = PIXI.BLEND_MODES.NORMAL;
+                this.clear();
+            }*/
+        }
+
     }
 }

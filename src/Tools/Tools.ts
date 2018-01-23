@@ -4,6 +4,7 @@ import Graphics from '../Graphics/Graphics';
 import Draw from '../Draw';
 import Surface from '../Surface';
 import Line from '../Math/Line';
+import Settings from '../Settings';
 
 export class LineTool extends Tool {
     private _isFirstPoint: boolean = true;
@@ -77,24 +78,42 @@ export class LineTool extends Tool {
 }
 
 export class EraserTool extends Tool {
+    public isErasing: boolean = false;
+    public radius: number = 5;
+
     constructor(element: HTMLButtonElement) {
         super("eraser", element);
         this.registerAction('erase', Input.mouseButton(MouseButtons.Main));
     }
 
     public render(surface: Surface) {
+        let pointerPos = Input.pointerPos;
+        let rectBrush = new PIXI.Rectangle(pointerPos.x - this.radius, pointerPos.y - this.radius, (this.radius * 2) + 1, (this.radius * 2) + 1);
+
+        Draw.rectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, null, { color: 0x3E3E3E });
+
+        if (!this.isErasing) {
+            return;
+        }
+
+        Tool.bufferGraphicsContext.clear();
+        Tool.bufferGraphicsContext.drawRectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, { color: Settings.clearColor, alpha: 1 });
+        surface.draw(Tool.bufferGraphicsContext);
     }
 
-    public onSelected(): void {
-        super.onSelected();
+    public onDeselected(): void {
+        super.onDeselected();
+        this.isErasing = false;
     }
 
     private onEraseStart(): void {
+        this.isErasing = true;
     }
-    
+
     private onEraseUpdate(): void {
     }
 
     private onEraseEnd(): void {
+        this.isErasing = false;
     }
 }
