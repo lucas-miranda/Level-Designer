@@ -28,11 +28,11 @@
   ],
   "devDependencies": {
     "@types/pixi.js": "^4.6.3",
-    "electron": "^1.7.10",
+    "electron": "^1.8.1",
     "less": "^2.7.3",
     "typings": "^2.1.1"
   },
   "dependencies": {
-    "pixi.js": "^4.6.2"
+    "pixi.js": "^4.7.0"
   }
 }
