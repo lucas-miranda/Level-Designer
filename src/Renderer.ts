@@ -201,23 +201,23 @@ export class Renderer {
                     let afterPanViewPos = Point.add(viewPos, panMovement);
 
                     // horizontal
-                    if (this._viewBounds.width + 2 * extraHorizontalSpacing < Settings.rendererWidth) {
+                    if (this._viewBounds.width * this.zoom + 2 * extraHorizontalSpacing < Settings.rendererWidth) {
                         viewPos.x = centralizedViewPos.x;
                     } else {
-                        viewPos.x = clamp(afterPanViewPos.x, -extraHorizontalSpacing, (Settings.gridWidth + 2 * extraHorizontalSpacing) - Settings.rendererWidth - extraHorizontalSpacing);
+                        viewPos.x = clamp(afterPanViewPos.x, -extraHorizontalSpacing, (Settings.gridWidth * this.zoom + 2 * extraHorizontalSpacing) - Settings.rendererWidth - extraHorizontalSpacing);
                     }
 
                     // vertical
-                    if (this._viewBounds.height + 2 * extraVerticalSpacing < Settings.rendererHeight) {
+                    if (this._viewBounds.height * this.zoom + 2 * extraVerticalSpacing < Settings.rendererHeight) {
                         viewPos.y = centralizedViewPos.y;
                     } else {
-                        viewPos.y = clamp(afterPanViewPos.y, -extraVerticalSpacing, (Settings.gridHeight + 2 * extraVerticalSpacing) - Settings.rendererHeight - extraVerticalSpacing);
+                        viewPos.y = clamp(afterPanViewPos.y, -extraVerticalSpacing, (Settings.gridHeight * this.zoom + 2 * extraVerticalSpacing) - Settings.rendererHeight - extraVerticalSpacing);
                     }
 
                     this.viewPosition = viewPos;
                 }, this);
 
-        this.debugText = new PIXI.Text('', { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
+        this.debugText = new PIXI.Text('Debug', { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
         this._app.stage.addChild(this.debugText);
     }
 
