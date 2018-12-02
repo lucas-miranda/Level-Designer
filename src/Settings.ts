@@ -1,3 +1,5 @@
+import { TargetMode } from './TargetMode';
+
 export default class Settings {
     public static renderWrapper: HTMLElement;
     public static rendererSize: Size = { width: 0, height: 0 };
@@ -5,6 +7,7 @@ export default class Settings {
     public static gridCellSize: Size = { width: 0, height: 0 };
     public static currentZoomFactor = 1.0;
     public static clearColor = 0xfffff1;
+    public static targetMode: TargetMode = TargetMode.Tile;
 
     public static get rendererWidth(): number {
         return Settings.rendererSize.width;

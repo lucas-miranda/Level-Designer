@@ -1,10 +1,90 @@
+import { TargetMode } from '../TargetMode';
 import Tool, { ToolAction } from './Tool';
-import Input, { MouseButtons } from '../Input';
+import Input, { Key, MouseButtons } from '../Input';
 import Graphics from '../Graphics/Graphics';
 import Draw from '../Draw';
 import Surface from '../Surface';
 import Line from '../Math/Line';
 import Settings from '../Settings';
+
+export class PencilTool extends Tool {
+    private _isPlacing: boolean = false;
+
+    constructor(element: HTMLButtonElement) {
+        super('pencil', element);
+        this.registerAction('place', Input.mouseButton(MouseButtons.Main));
+    }
+
+    public render(surface: Surface) {
+        switch (Settings.targetMode) {
+            case TargetMode.Pixel:
+                let pointerPos = Input.pointerPos;
+
+                Draw.rectangle(
+                    pointerPos.x,
+                    pointerPos.y,
+                    1,
+                    1,
+                    { color: 0x292929, alpha: .3 }
+                );
+
+                if (this._isPlacing) {
+                    Tool.bufferGraphicsContext.clear();
+
+                    Tool.bufferGraphicsContext.drawRectangle(
+                        pointerPos.x,
+                        pointerPos.y,
+                        1,
+                        1,
+                        { color: 0x292929, alpha: 1 }
+                    );
+
+                    surface.draw(Tool.bufferGraphicsContext);
+                }
+                break;
+
+            case TargetMode.Tile:
+                let pointerGridCell = Input.pointerGridCell;
+
+                Draw.rectangle(
+                    pointerGridCell.x * Settings.gridCellSize.width,
+                    pointerGridCell.y * Settings.gridCellSize.height,
+                    Settings.gridCellSize.width,
+                    Settings.gridCellSize.height,
+                    { color: 0x292929, alpha: .3 }
+                );
+
+                if (this._isPlacing) {
+                    Tool.bufferGraphicsContext.clear();
+
+                    Tool.bufferGraphicsContext.drawRectangle(
+                        pointerGridCell.x * Settings.gridCellSize.width,
+                        pointerGridCell.y * Settings.gridCellSize.height,
+                        Settings.gridCellSize.width,
+                        Settings.gridCellSize.height,
+                        { color: 0x292929, alpha: 1 }
+                    );
+
+                    surface.draw(Tool.bufferGraphicsContext);
+                }
+                break;
+
+            default:
+                break;
+        }
+    }
+
+    private onPlaceStart(): void {
+        this._isPlacing = true;
+    }
+
+    private onPlaceUpdate(): void {
+    }
+
+    private onPlaceEnd(): void {
+        this._isPlacing = false;
+    }
+}
 
 export class LineTool extends Tool {
     private _isFirstPoint: boolean = true;

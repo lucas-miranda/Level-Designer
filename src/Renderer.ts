@@ -1,6 +1,7 @@
 import { ipcRenderer } from 'electron';
 import * as PIXI from 'pixi.js';
 import Settings from './Settings';
+import { TargetMode } from './TargetMode';
 import Surface from './Surface';
 import Draw from './Draw';
 import Graphics from './Graphics/Graphics';
@@ -74,7 +75,7 @@ export class Renderer {
         // toolbar
         Tool.bufferGraphicsContext = Graphics.create(this.gridContainer);
         this.toolbar = new Toolbar();
-        this.toolbar.registerTools('line', 'eraser');
+        this.toolbar.registerTools('pencil', 'line', 'eraser');
 
         // callbacks
         this.start();
@@ -179,6 +180,7 @@ export class Renderer {
         this._statusBarElements.set('mousePos', document.getElementById('mouse-pos'));
         this._statusBarElements.set('mouseGridPos', document.getElementById('mouse-grid-pos'));
         this._statusBarElements.set('zoom', document.getElementById('zoom'));
+        this._statusBarElements.set('targetMode', document.getElementById('target-mode'));
 
         // pan
         this.viewBounds = new PIXI.Rectangle(0, 0, Settings.rendererWidth, Settings.rendererHeight);
@@ -217,6 +219,23 @@ export class Renderer {
                     this.viewPosition = viewPos;
                 }, this);
 
+        // switch target mode
+        Input.keyboardButton(Key.Tab)
+                .addListener('pressed', function() {
+                    switch (Settings.targetMode) {
+                        case TargetMode.Pixel:
+                            Settings.targetMode = TargetMode.Tile;
+                            break;
+
+                        case TargetMode.Tile:
+                            Settings.targetMode = TargetMode.Pixel;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }, this)
+
         this.debugText = new PIXI.Text('Debug', { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
         this._app.stage.addChild(this.debugText);
     }
@@ -243,6 +262,23 @@ export class Renderer {
         Input.lateUpdate();
         let pointerPos = Input.pointerPos;
         let pointerGridCell = Input.pointerGridCell;
+
+        let targetMode: string = 'None';
+
+        switch (Settings.targetMode) {
+            case TargetMode.Pixel:
+                targetMode = 'Pixel';
+                break;
+
+            case TargetMode.Tile:
+                targetMode = 'Tile';
+                break;
+
+            default:
+                break;
+        }
+
+        this._statusBarElements.get('targetMode').textContent = targetMode;
         this._statusBarElements.get('mousePos').textContent = `${pointerPos.x.toFixed(0)}, ${pointerPos.y.toFixed(0)}`;
         this._statusBarElements.get('mouseGridPos').textContent = `[${pointerGridCell.x}, ${pointerGridCell.y}]`;
         this._statusBarElements.get('zoom').textContent = `${(this.zoom * 100.0).toFixed(0)}%`;
