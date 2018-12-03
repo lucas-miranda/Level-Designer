@@ -41,8 +41,8 @@ export default class Graphics extends Graphic {
         container.addChild(PIXI_graphics);
         return graphics;
     }
-
     public lineStyle(color: number, lineWidth?: number, alpha?: number): void {
+
         this._graphicsContext.lineStyle(lineWidth || 1, color, alpha);
     }
 

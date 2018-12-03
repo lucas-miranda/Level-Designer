@@ -1,6 +1,7 @@
 import { TargetMode } from '../TargetMode';
 import Tool, { ToolAction } from './Tool';
 import Input, { Key, MouseButtons } from '../Input';
+import Color from '../Graphics/Color';
 import Graphics from '../Graphics/Graphics';
 import Draw from '../Draw';
 import Surface from '../Surface';
@@ -167,18 +168,53 @@ export class EraserTool extends Tool {
     }
 
     public render(surface: Surface) {
-        let pointerPos = Input.pointerPos;
-        let rectBrush = new PIXI.Rectangle(pointerPos.x - this.radius, pointerPos.y - this.radius, (this.radius * 2) + 1, (this.radius * 2) + 1);
+        switch (Settings.targetMode) {
+            case TargetMode.Pixel:
+                let pointerPos = Input.pointerPos;
+                let rectBrush = new PIXI.Rectangle(pointerPos.x - this.radius, pointerPos.y - this.radius, (this.radius * 2) + 1, (this.radius * 2) + 1);
 
-        Draw.rectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, null, { color: 0x3E3E3E });
+                Draw.rectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, null, { color: 0x3E3E3E });
 
-        if (!this.isErasing) {
-            return;
+                if (!this.isErasing) {
+                    return;
+                }
+
+                Tool.bufferGraphicsContext.clear();
+                Tool.bufferGraphicsContext.drawRectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, { color: Settings.clearColor, alpha: 1 });
+                surface.draw(Tool.bufferGraphicsContext);
+                break;
+
+            case TargetMode.Tile:
+                let cellPos = Input.pointerGridCell;
+                let cellBrush = new PIXI.Rectangle(
+                    cellPos.x * Settings.gridCellSize.width,
+                    cellPos.y * Settings.gridCellSize.height,
+                    Settings.gridCellSize.width,
+                    Settings.gridCellSize.height,
+                );
+
+                Draw.rectangle(
+                    cellBrush.x,
+                    cellBrush.y,
+                    cellBrush.width,
+                    cellBrush.height,
+                    null,
+                    { color: Color.lighten(new Color(0x3E3E3E), .4).RGB }
+                );
+
+                if (!this.isErasing) {
+                    return;
+                }
+
+                Tool.bufferGraphicsContext.clear();
+                Tool.bufferGraphicsContext.drawRectangle(cellBrush.x, cellBrush.y, cellBrush.width, cellBrush.height, { color: Settings.clearColor, alpha: 1 });
+                surface.draw(Tool.bufferGraphicsContext);
+
+                break;
+
+            default:
+                break;
         }
-
-        Tool.bufferGraphicsContext.clear();
-        Tool.bufferGraphicsContext.drawRectangle(rectBrush.x, rectBrush.y, rectBrush.width, rectBrush.height, { color: Settings.clearColor, alpha: 1 });
-        surface.draw(Tool.bufferGraphicsContext);
     }
 
     public onDeselected(): void {

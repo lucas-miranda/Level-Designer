@@ -4,6 +4,7 @@ import Settings from './Settings';
 import { TargetMode } from './TargetMode';
 import Surface from './Surface';
 import Draw from './Draw';
+import Color from './Graphics/Color';
 import Graphics from './Graphics/Graphics';
 import Graphic from './Graphics/Graphic';
 import Toolbar from './Tools/Toolbar';
@@ -236,7 +237,9 @@ export class Renderer {
                     }
                 }, this)
 
-        this.debugText = new PIXI.Text('Debug', { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
+        let text = `Debug`;
+
+        this.debugText = new PIXI.Text(text, { fontFamily: 'Arial', fontSize: 12, fill: 0xff00ff, align: 'center' });
         this._app.stage.addChild(this.debugText);
     }
 
@@ -291,9 +294,9 @@ export class Renderer {
 
         Draw.clear();
         this.gridContainer.setTransform(-this._viewBounds.x, -this._viewBounds.y, this.zoom, this.zoom);
-        this.toolbar.render(this.surface);
         Draw.lineStyle(0xCAEBFD);
         Draw.grid(this.bounds, Settings.gridCellSize);
+        this.toolbar.render(this.surface);
     }
 }
 
